@@ -209,8 +209,7 @@ Ao contribuir, procure manter:
 
 ## 📄 Licença
 
-Nenhuma licença foi identificada no repositório no momento da documentação. Até que uma licença seja adicionada, os direitos de uso, cópia e distribuição permanecem reservados ao titular dos direitos autorais.
-
+Essa IA foi criada por um aluno Desenvolvedor de Sistemas inspirado na CAPRIA de cyberounk! Feito por lazaro3308. 
 ---
 
 <p align="center">
