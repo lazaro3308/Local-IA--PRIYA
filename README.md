@@ -1,4 +1,4 @@
-# PRIA — Assistente pessoal com IA local
+# PRIYA — Assistente pessoal com IA local
 
 <p align="center">
   <strong>Uma assistente pessoal para Windows, com foco em execução local, privacidade e automação assistida.</strong>
