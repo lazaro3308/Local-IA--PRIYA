@@ -1,100 +1,127 @@
-# PRIYA — Assistente pessoal com IA local
+# PRIYA
+### Assistente pessoal com inteligência artificial local
 
 <p align="center">
-  <strong>Uma assistente pessoal para Windows, com foco em execução local, privacidade e automação assistida.</strong>
+  <strong>Uma assistente desktop para Windows, desenvolvida em Python e projetada para trabalhar com modelos de IA executados localmente.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Plataforma-Windows%2010%2B-0078D4?logo=windows&logoColor=white" alt="Windows 10+">
-  <img src="https://img.shields.io/badge/LLM-Ollama-111111?logo=ollama&logoColor=white" alt="Ollama">
-  <img src="https://img.shields.io/badge/Interface-PySide6-41CD52?logo=qt&logoColor=white" alt="PySide6">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Windows-10%2B-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/LLM-Ollama-111111?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama">
+  <img src="https://img.shields.io/badge/UI-PySide6-41CD52?style=for-the-badge&logo=qt&logoColor=white" alt="PySide6">
 </p>
 
-A **PRIA** é uma assistente pessoal desenvolvida em Python para rodar localmente no Windows. Ela conversa usando um modelo servido pelo [Ollama](https://ollama.com/), mantém histórico e memórias explícitas em SQLite e oferece ferramentas para trabalhar com arquivos, aplicativos e janelas do sistema.
+A **PRIYA** é um projeto de assistente pessoal desenvolvido para Windows. O núcleo em Python se comunica com modelos de linguagem servidos pelo [Ollama](https://ollama.com/), mantém histórico e memórias explícitas em SQLite e disponibiliza ferramentas locais para apoiar tarefas com arquivos, aplicativos e janelas do sistema.
 
-O projeto também conta com uma interface desktop em Qt, comandos em português e recursos opcionais de voz e automação.
+O projeto reúne interface gráfica, comandos em português e módulos opcionais de voz e automação. A proposta é explorar uma arquitetura de IA local, com atenção à privacidade, à confirmação de ações sensíveis e à evolução incremental do software.
 
-> **Status:** projeto em desenvolvimento. Alguns recursos dependem de bibliotecas, modelos locais e configurações adicionais.
+> **Estado do projeto:** em desenvolvimento. A disponibilidade de alguns recursos depende das bibliotecas, dos modelos e das configurações instaladas no computador.
 
 ---
 
-## ✨ Funcionalidades
+## Índice
 
-- **Conversas com IA local:** integração com modelos servidos pelo Ollama — configuração padrão: `qwen2.5:7b`.
-- **Memória local:** histórico de conversas e fatos salvos explicitamente em banco SQLite no próprio computador.
-- **Interface desktop:** aplicativo nativo construído com PySide6, com histórico de conversas.
-- **Terminal em português:** comandos diretos e interpretação de pedidos para ferramentas locais.
-- **Arquivos e documentos:** listar, buscar, ler, criar, copiar, mover e renomear arquivos; leitura de PDF e DOCX depende das bibliotecas correspondentes.
-- **Aplicativos e janelas:** abrir aplicativos, listar janelas e, com confirmação, interagir com janelas do Windows.
-- **Automação assistida:** digitação, cliques e controle de janelas por meio de ferramentas do Windows.
-- **Ferramentas de desenvolvimento:** criação assistida de arquivos de código em uma área de projetos, sem executar automaticamente o código gerado.
-- **Leitura de páginas públicas:** busca o conteúdo textual de uma URL HTTP(S) quando solicitada; esse recurso precisa de internet.
-- **Voz local opcional:** integração com Vosk para reconhecimento de fala e Piper para síntese de voz, quando os modelos e dependências estiverem instalados.
-- **Autoaperfeiçoamento experimental:** propostas de alteração passam por confirmação, backup e testes locais antes de serem aplicadas.
+- [Principais recursos](#-principais-recursos)
+- [Tecnologias](#-tecnologias)
+- [Como funciona](#-visão-geral-da-arquitetura)
+- [Requisitos](#-requisitos)
+- [Instalação](#-instalação)
+- [Configuração](#-configuração)
+- [Comandos](#-comandos-disponíveis)
+- [Testes e diagnóstico](#-testes-e-diagnóstico)
+- [Privacidade e segurança](#-privacidade-e-segurança)
+- [Limitações e próximos passos](#-limitações-e-próximos-passos)
+
+## ✨ Principais recursos
+
+| Recurso | Descrição |
+|---|---|
+| Conversação com IA local | Integração com modelos servidos pelo Ollama. O modelo padrão configurado é `qwen2.5:7b`. |
+| Memória local | Histórico de conversas e memórias explícitas persistidos em SQLite. |
+| Interface desktop | Aplicação gráfica construída com PySide6 / Qt. |
+| Comandos em português | Comandos diretos e interpretação de solicitações para ferramentas locais. |
+| Gerenciamento de arquivos | Ferramentas para listar, buscar, ler, criar, copiar, mover e renomear arquivos. |
+| Aplicativos e janelas | Recursos para abrir aplicativos, listar janelas e interagir com elas mediante confirmação quando aplicável. |
+| Automação assistida | Ferramentas de interação com janelas do Windows, como digitação e cliques. |
+| Apoio à programação | Criação assistida de arquivos de código em uma área de projetos; o código gerado não é executado automaticamente. |
+| Leitura de páginas públicas | Extração de conteúdo textual de URLs HTTP(S), recurso que requer conexão com a internet. |
+| Voz opcional | Integração com Vosk (reconhecimento) e Piper (síntese), quando dependências e modelos estão instalados. |
+| Autoaperfeiçoamento experimental | Propostas de alteração sujeitas a confirmação, backup e testes locais. |
 
 ## 🧰 Tecnologias
 
-| Tecnologia | Uso |
+| Tecnologia | Responsabilidade |
 |---|---|
 | Python 3.10+ | Linguagem principal |
-| Ollama | Serviço local para execução do modelo de linguagem |
+| Ollama | Execução local do modelo de linguagem |
 | Qwen 2.5 7B | Modelo padrão configurado |
-| SQLite | Histórico e memórias locais |
-| PySide6 / Qt | Interface gráfica |
-| Vosk e Piper | Recursos opcionais de voz |
+| SQLite | Armazenamento local de histórico e memórias |
+| PySide6 / Qt | Interface gráfica desktop |
+| Vosk / Piper | Recursos opcionais de voz |
 | pywinauto | Automação opcional da interface do Windows |
 | unittest | Testes automatizados |
+
+## 🧠 Visão geral da arquitetura
+
+A aplicação é organizada em módulos com responsabilidades separadas:
+
+- **Core:** agente, comunicação com o modelo local e execução coordenada de tarefas.
+- **Interface:** experiência desktop e interface de terminal.
+- **Memory:** persistência de histórico e memórias em SQLite.
+- **Tools:** recursos para arquivos, aplicativos, páginas web e automação.
+- **Security:** controles relacionados à execução de ações.
+- **Scripts:** instalação, inicialização e diagnóstico.
+
+O fluxo principal utiliza o serviço local do Ollama. Recursos de consulta a páginas públicas são opcionais e dependem de internet; portanto, o projeto não deve ser descrito como totalmente offline em todos os cenários.
 
 ## 💻 Requisitos
 
 - Windows 10 ou superior.
 - Python 3.10 ou superior.
-- [Ollama instalado para Windows](https://ollama.com/download).
-- Modelo `qwen2.5:7b` baixado no Ollama.
-- Para a interface gráfica, PySide6 instalado no ambiente Python.
-- Recursos opcionais (voz, leitura de documentos e automação) podem exigir dependências e modelos adicionais.
+- [Ollama para Windows](https://ollama.com/download).
+- Modelo `qwen2.5:7b disponível no Ollama.
+- PySide6 para executar a interface gráfica.
+- Dependências e modelos adicionais para recursos opcionais, como voz, leitura de documentos e automação.
 
 ## 🚀 Instalação
 
-### 1. Clone o repositório
+### 1. Clonar o repositório
 
 ```powershell
 git clone https://github.com/lazaro3308/Local-IA--PRIYA.git
 cd Local-IA--PRIYA
 ```
 
-### 2. Verifique o ambiente
+### 2. Verificar o ambiente
 
-No PowerShell:
+No PowerShell, execute o script de instalação/verificação incluído no projeto:
 
 ```powershell
 .\scripts\install.ps1
 ```
 
-O script verifica se Python e Ollama estão disponíveis e informa o modelo necessário.
-
-### 3. Baixe o modelo
+### 3. Baixar o modelo local
 
 ```powershell
 ollama pull qwen2.5:7b
 ```
 
-Mantenha o Ollama em execução antes de iniciar a PRIA.
+Certifique-se de que o Ollama esteja em execução antes de iniciar a PRIYA.
 
-### 4. Inicie pelo terminal
+### 4. Iniciar pelo terminal
 
 ```powershell
 .\scripts\start.ps1
 ```
 
-Alternativamente:
+Como alternativa, a partir da raiz do repositório:
 
 ```powershell
 python -m pria.main
 ```
 
-### 5. Abra a interface gráfica
+### 5. Iniciar a interface gráfica
 
 Com PySide6 instalado no mesmo ambiente Python:
 
@@ -104,9 +131,9 @@ python -m pria.interface.desktop
 
 ## ⚙️ Configuração
 
-A PRIA aceita um arquivo opcional `config.json` na raiz do projeto. Se ele não existir, os valores padrão são utilizados.
+A aplicação aceita um arquivo opcional `config.json` na raiz. Na ausência dele, utiliza os valores padrão definidos no projeto.
 
-Exemplo:
+Exemplo de configuração:
 
 ```json
 {
@@ -118,68 +145,49 @@ Exemplo:
 }
 ```
 
-Também é possível sobrescrever as configurações por variáveis de ambiente:
+Variáveis de ambiente reconhecidas:
 
 | Variável | Finalidade |
 |---|---|
-| `PRIA_OLLAMA_URL` | Endereço local do Ollama |
-| `PRIA_MODEL` | Nome do modelo |
+| `PRIA_OLLAMA_URL` | Endereço do serviço Ollama |
+| `PRIA_MODEL` | Nome do modelo utilizado |
 | `PRIA_TIMEOUT` | Tempo limite das requisições |
 | `PRIA_CONTEXT` | Tamanho da janela de contexto |
 | `PRIA_MAX_RESPONSE_TOKENS` | Limite padrão de tokens da resposta |
 
-Por segurança, a configuração atual aceita o serviço do modelo somente em endereço local (localhost/loopback).
+A configuração descrita pelo projeto restringe o serviço do modelo a endereços locais (localhost/loopback).
 
-## ⌨️ Comandos úteis
+## ⌨️ Comandos disponíveis
 
-Digite `/ajuda` dentro do terminal para consultar a lista completa. Alguns comandos disponíveis:
+Use `/ajuda` no terminal da PRIYA para consultar a lista atualizada. Entre os comandos documentados estão:
 
-| Comando | O que faz |
+| Comando | Descrição |
 |---|---|
-| `/ajuda` | Exibe os comandos disponíveis |
+| `/ajuda` | Exibe a ajuda |
 | `/apps` | Lista aplicativos reconhecidos |
 | `/abrir-app <nome>` | Abre um aplicativo |
-| `/listar [pasta]` | Lista o conteúdo de uma pasta |
-| `/buscar <padrão> [pasta]` | Procura arquivos |
+| `/listar [pasta]` | Lista arquivos de uma pasta |
+| `/buscar <padrão> [pasta]` | Pesquisa arquivos |
 | `/ler <arquivo>` | Lê um documento compatível |
 | `/ler-web <URL>` | Extrai texto de uma página pública |
 | `/janelas` | Lista janelas visíveis |
 | `/guardar <texto>` | Salva uma memória explícita |
-| `/memoria` | Exibe dados salvos localmente |
+| `/memoria` | Consulta memórias locais |
 | `/novo` | Inicia uma nova conversa |
 | `/apagar-memoria` | Solicita a exclusão do histórico e das memórias |
-| `/sair` | Encerra a PRIA |
+| `/sair` | Encerra a aplicação |
 
-Algumas ações — como executar comandos PowerShell, digitar em janelas, clicar, fechar janelas e apagar memórias — solicitam confirmação explícita.
+Os comandos disponíveis podem variar conforme a configuração e a versão do projeto.
 
-## 🗂️ Estrutura do projeto
+## 🧪 Testes e diagnóstico
 
-```text
-Local-IA--PRIYA/
-├── assets/                  # Recursos visuais
-├── pria/
-│   ├── core/                # Agente, modelo local e lógica principal
-│   ├── interface/           # Interface desktop
-│   ├── memory/              # Persistência SQLite
-│   ├── security/            # Componentes de segurança
-│   ├── tools/                # Arquivos, apps, web e automação
-│   ├── config.py            # Configuração do modelo
-│   ├── diagnostics.py       # Diagnóstico do ambiente
-│   └── main.py              # Interface de terminal
-├── scripts/                 # Instalação, inicialização e diagnóstico
-├── tests/                   # Testes automatizados
-└── README.md
-```
-
-## 🧪 Testes
-
-Com Python disponível, execute na raiz do repositório:
+Execute os testes automatizados a partir da raiz:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-O diagnóstico do ambiente pode ser executado com:
+Para verificar o ambiente:
 
 ```powershell
 python -m pria.diagnostics
@@ -187,33 +195,38 @@ python -m pria.diagnostics
 
 ## 🔐 Privacidade e segurança
 
-- As conversas e memórias explícitas são armazenadas em SQLite local.
-- O modelo é consultado por meio do serviço local do Ollama.
-- A leitura de páginas web é uma funcionalidade separada e requer internet.
-- Ações sensíveis do sistema solicitam confirmação antes da execução.
+O projeto foi estruturado com foco em execução local, mas recursos opcionais podem acessar a internet ou interagir com o sistema operacional.
+
+- O histórico e as memórias explícitas são armazenados localmente em SQLite.
+- A comunicação com o modelo é feita pelo serviço local do Ollama.
+- A leitura de páginas públicas exige conexão com a internet.
+- Ações sensíveis podem solicitar confirmação antes da execução.
 - O acesso web valida URLs e bloqueia destinos locais/privados.
-- Arquivos e páginas externas são tratados como conteúdo não confiável, não como instruções.
-- A PRIA não deve executar automaticamente o código que gera.
+- Conteúdo de arquivos e páginas externas deve ser tratado como dado não confiável.
+- O código produzido pela ferramenta de apoio à programação não deve ser executado automaticamente.
 
-**Atenção:** automação de janelas e comandos do sistema podem alterar o estado do computador. Revise a ação apresentada antes de confirmar.
+**Importante:** automações e comandos do sistema podem modificar arquivos, janelas ou configurações do computador. Revise cada ação antes de autorizá-la. Não utilize a aplicação com permissões elevadas sem necessidade.
 
-## 🛠️ Desenvolvimento
+Nunca publique senhas, tokens, arquivos de configuração privados, bancos de dados pessoais ou informações sensíveis no repositório.
 
-O projeto está em evolução. Melhorias podem incluir documentação adicional, configuração simplificada de dependências, testes e ampliação dos recursos locais.
+## 🛣️ Limitações e próximos passos
 
-Ao contribuir, procure manter:
-- operações sensíveis protegidas por confirmação;
-- dados pessoais e segredos fora do repositório;
-- testes para novos comportamentos;
-- compatibilidade com o ambiente Windows previsto pelo projeto.
+A PRIYA está em desenvolvimento. A qualidade das respostas depende do modelo escolhido, dos recursos de hardware e das configurações de contexto. Voz, leitura de documentos e automação podem exigir instalação adicional.
 
-## 📄 Licença
+Possíveis frentes de evolução:
 
-Essa IA foi criada por um aluno Desenvolvedor de Sistemas inspirado na CAPRIA de cyberounk! Feito por lazaro3308. 
----
+- ampliar a cobertura e a confiabilidade dos testes;
+- melhorar a recuperação e organização da memória;
+- aprimorar tratamento de erros e observabilidade;
+- documentar permissões e escopos de cada ferramenta;
+- ampliar a experiência de instalação e configuração.
+
+## 📄 Licença e autoria
+
+Consulte os termos e avisos de licença presentes no repositório e nas dependências utilizadas.
+
+Desenvolvido por **lazaro3308** como projeto independente de estudo e experimentação em Python, IA local e automação para Windows.
 
 <p align="center">
-  Desenvolvido com Python, tecnologia local e foco em privacidade.
-  <br>
-  <strong>PRIA — sua assistente, no seu computador.</strong>
+  <strong>PRIYA — inteligência local, ferramentas úteis e controle consciente.</strong>
 </p>
