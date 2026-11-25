@@ -114,6 +114,23 @@ class DesktopInputTests(unittest.TestCase):
         window.close()
         window.deleteLater()
 
+    def test_welcome_compacts_to_fit_a_short_window_without_cutting_cards(self):
+        window = PriyaDesktop()
+        window.resize(1180, 560)
+        window.show()
+        self.app.processEvents()
+        window._update_welcome_density()
+        self.app.processEvents()
+        self.assertLess(window.screen_stack.height(), 360)
+        self.assertEqual(window.welcome_heading.text(), "O que vamos resolver hoje?")
+        self.assertFalse(window.welcome_mark.isVisible())
+        self.assertLessEqual(window.welcome_scroll.verticalScrollBar().maximum(), 2)
+        self.assertTrue(window.welcome_subtitle.isVisible())
+        self.assertEqual(window.welcome_subtitle.text(), "Digite abaixo ou use o microfone para começar.")
+        window.closing = True
+        window.close()
+        window.deleteLater()
+
     def test_memory_button_starts_a_separate_memory_conversation(self):
         with tempfile.TemporaryDirectory() as temp:
             memory = LocalMemory(Path(temp) / "memory.sqlite3")

@@ -64,9 +64,11 @@ As capturas usam somente mensagens sintéticas e não incluem conteúdo do banco
 
 ![Tela inicial da PRIYA](assets/priya-interface-welcome.png)
 
+![Tela compacta sem textos cortados](assets/priya-interface-compact.png)
+
 ![Conversa da PRIYA](assets/priya-interface-chat.png)
 
-Recrie as imagens de demonstração localmente com `python scripts\\capture_ui_previews.py`.
+A tela inicial se adapta à altura disponível; em janelas baixas, remove os cartões de sugestão e mantém o título legível. Recrie as imagens de demonstração localmente com `python scripts\\capture_ui_previews.py`.
 
 ## 🎞️ Imagens e vídeos locais
 

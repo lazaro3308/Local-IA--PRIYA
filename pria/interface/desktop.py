@@ -152,6 +152,7 @@ class PriyaDesktop(QMainWindow):
             QFrame#VoiceControls { background: #0d0e13; border: 1px solid #292a33; border-radius: 12px; }
             QTextBrowser#Transcript { background: #0c0d12; color: #ecebf0; border: 1px solid #292a33; border-radius: 16px; padding: 22px; selection-background-color: #4b1821; }
             QWidget#Welcome { background: #0c0d12; border: 1px solid #292a33; border-radius: 16px; }
+            QScrollArea#WelcomeScroll { background: #0c0d12; border: 1px solid #292a33; border-radius: 16px; }
             QPlainTextEdit#MessageBox { background: #0d0e13; color: #f5f3f4; border: 1px solid #2b2c35; border-radius: 11px; padding: 13px; selection-background-color: #4b1821; font-size: 14px; }
             QPlainTextEdit#MessageBox:focus { border: 1px solid #cf3948; background: #101117; }
             QPushButton { background: #17181f; color: #dedde3; border: 1px solid #343540; border-radius: 10px; padding: 10px 15px; font-size: 10pt; }
@@ -382,34 +383,50 @@ class PriyaDesktop(QMainWindow):
         shell.addWidget(content, 1)
 
     def _make_welcome(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setObjectName("WelcomeScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         page = QWidget()
         page.setObjectName("Welcome")
+        page.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.welcome_page = page
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(34, 26, 34, 24)
-        outer.addStretch(1)
+        outer.setContentsMargins(22, 16, 22, 16)
+        outer.setSpacing(8)
+        self.welcome_layout = outer
 
         mark = ArasakaMark()
-        mark.setFixedSize(54, 54)
+        mark.setFixedSize(46, 46)
+        self.welcome_mark = mark
         outer.addWidget(mark, alignment=Qt.AlignHCenter)
         eyebrow = QLabel("PRIVADA  ·  LOCAL  ·  SEM CRÉDITOS")
+        self.welcome_eyebrow = eyebrow
         eyebrow.setAlignment(Qt.AlignCenter)
         eyebrow.setStyleSheet("color:#e04452;font-size:8pt;font-weight:700;letter-spacing:1.8px;margin-top:10px")
         outer.addWidget(eyebrow)
         heading = QLabel("Olá. O que vamos\nresolver hoje?")
+        self.welcome_heading = heading
         heading.setAlignment(Qt.AlignCenter)
+        heading.setWordWrap(True)
         heading.setStyleSheet("color:#f1eff1;font-size:30px;font-weight:650;line-height:1.2;margin-top:8px")
         outer.addWidget(heading)
         subtitle = QLabel("Converse por texto ou voz. Seus dados ficam neste computador.")
+        self.welcome_subtitle = subtitle
         subtitle.setAlignment(Qt.AlignCenter)
         subtitle.setWordWrap(True)
         subtitle.setStyleSheet("color:#91a4b8;font-size:10pt;margin-top:4px;margin-bottom:17px")
         outer.addWidget(subtitle)
 
         section = QLabel("ESCOLHA UM PONTO DE PARTIDA")
+        self.welcome_section = section
         section.setStyleSheet("color:#71869a;font-size:8pt;font-weight:700;letter-spacing:1px;margin-bottom:2px")
         outer.addWidget(section)
         suggestions = QGridLayout()
         suggestions.setSpacing(9)
+        self.welcome_suggestions = suggestions
         cards = (
             ("Estudar um assunto", "Explique um tema passo a passo."),
             ("Escrever ou revisar", "Ajude-me a revisar este texto: "),
@@ -420,13 +437,45 @@ class PriyaDesktop(QMainWindow):
         for index, (label, prompt) in enumerate(cards):
             button = QPushButton(label + "\n" + prompt.rstrip())
             button.setObjectName("Suggestion")
-            button.setMinimumHeight(64)
+            button.setMinimumHeight(56)
             button.clicked.connect(lambda _checked=False, text=prompt: self._use_suggestion(text))
             suggestions.addWidget(button, index // 2, index % 2)
             self.suggestion_buttons.append(button)
         outer.addLayout(suggestions)
-        outer.addStretch(1)
-        return page
+        scroll.setWidget(page)
+        self.welcome_scroll = scroll
+        return scroll
+
+    def _update_welcome_density(self) -> None:
+        if not hasattr(self, "welcome_scroll"):
+            return
+        compact = self.screen_stack.height() < 360
+        self.welcome_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff if compact else Qt.ScrollBarAsNeeded)
+        self.welcome_mark.setVisible(not compact)
+        self.welcome_eyebrow.setVisible(not compact)
+        self.welcome_subtitle.setVisible(True)
+        self.welcome_subtitle.setText(
+            "Digite abaixo ou use o microfone para começar." if compact
+            else "Converse por texto ou voz. Seus dados ficam neste computador."
+        )
+        self.welcome_heading.setText("O que vamos resolver hoje?" if compact else "Olá. O que vamos\nresolver hoje?")
+        self.welcome_heading.setStyleSheet(
+            "color:#f1eff1;font-size:24px;font-weight:650;margin:0" if compact
+            else "color:#f1eff1;font-size:30px;font-weight:650;line-height:1.2;margin-top:8px"
+        )
+        self.welcome_layout.setContentsMargins(16, 12, 16, 12) if compact else self.welcome_layout.setContentsMargins(22, 16, 22, 16)
+        self.welcome_layout.setSpacing(6 if compact else 8)
+        self.welcome_section.setVisible(not compact)
+        for button in self.suggestion_buttons:
+            button.setVisible(not compact)
+            button.setMinimumHeight(44 if compact else 56)
+        self.welcome_page.updateGeometry()
+        self.welcome_scroll.widget().adjustSize()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if hasattr(self, "welcome_scroll"):
+            QTimer.singleShot(0, self._update_welcome_density)
 
     def _use_suggestion(self, prompt: str) -> None:
         self.input.setPlainText(prompt)
