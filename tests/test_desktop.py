@@ -35,6 +35,9 @@ class DesktopInputTests(unittest.TestCase):
         self.assertEqual(window.input.toPlainText(), "mensagem de teste")
         self.assertTrue(window.send_button.isVisible())
         self.assertTrue(window.voice_button.isVisible())
+        self.assertTrue(window.attach_image_button.isVisible())
+        self.assertTrue(window.video_button.isVisible())
+        self.assertFalse(window.clear_images_button.isEnabled())
         self.assertTrue(window.auto_voice.isChecked())
         self.assertFalse(window.windowIcon().isNull())
         window._append("Você", "Olá, Priya")
@@ -129,6 +132,27 @@ class DesktopInputTests(unittest.TestCase):
             self.assertNotEqual(window.session_id, "old-chat")
             submit.assert_called_once_with("Mostre toda a sua memória")
             self.assertEqual(memory.conversation_messages("old-chat"), old_messages)
+            window.closing = True
+            window.close()
+            window.deleteLater()
+
+    def test_image_message_calls_vision_and_keeps_only_filename_in_chat_history(self):
+        with tempfile.TemporaryDirectory() as temp:
+            memory = LocalMemory(Path(temp) / "memory.sqlite3")
+            image = Path(temp) / "private-photo.png"
+            image.write_bytes(b"PRIVATE IMAGE BYTES")
+            with patch("pria.interface.desktop.LocalMemory", return_value=memory):
+                window = PriyaDesktop()
+            with patch.object(window.chat, "reply", return_value="Descrição local") as reply:
+                window._process(
+                    "Descreva a imagem", "image-chat", [image],
+                    "Descreva a imagem\\n\\nImagens anexadas: private-photo.png",
+                )
+            reply.assert_called_once()
+            self.assertEqual(reply.call_args.kwargs["image_paths"], [image])
+            messages = memory.conversation_messages("image-chat")
+            self.assertIn("private-photo.png", messages[0]["content"])
+            self.assertNotIn("PRIVATE IMAGE BYTES", " ".join(row["content"] for row in messages))
             window.closing = True
             window.close()
             window.deleteLater()

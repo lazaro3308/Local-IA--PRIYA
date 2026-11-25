@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QScrollArea,
     QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QScrollBar,
     QSizePolicy, QSlider, QStackedWidget, QTextBrowser, QVBoxLayout, QWidget, QDialog, QListWidgetItem,
+    QFileDialog, QInputDialog,
 )
 
 from pria.config import load_settings
@@ -26,6 +27,7 @@ from pria.core.natural_commands import execute_obvious_local_request, requests_l
 from pria.memory.database import LocalMemory
 from pria.tools.applications import ApplicationLauncher
 from pria.tools.files import FileTools
+from pria.tools.media import MediaError, create_slideshow_video, validate_image_files, MAX_VIDEO_IMAGES
 from pria.main import execute_command, format_all_memory, is_memory_question
 
 
@@ -102,6 +104,7 @@ class PriyaDesktop(QMainWindow):
         self.transcriber = None
         self.listening = False
         self.last_answer = ""
+        self.image_attachments: list[Path] = []
         self.voice_rate = 1.0
         self.voice_volume = 1.0
         self.tts_cancel_event = None
@@ -165,6 +168,8 @@ class PriyaDesktop(QMainWindow):
             QPushButton#SendButton:hover { background: #e44251; border-color: #ff6974; }
             QPushButton#Suggestion { background: #13141a; color: #e3e1e6; border: 1px solid #30313a; border-radius: 11px; padding: 14px 15px; text-align: left; font-size: 10pt; }
             QPushButton#Suggestion:hover { background: #1a1419; border-color: #91404a; }
+            QPushButton#MediaButton { background: #11171c; border-color: #34414a; color: #b9d5dd; }
+            QPushButton#MediaButton:hover { background: #16242a; border-color: #42a7b5; }
             QLineEdit { background: #111218; color: #f1f0f2; border: 1px solid #30313a; border-radius: 9px; padding: 10px; }
             QCheckBox { color: #b6c3d2; spacing: 10px; min-height: 40px; padding-left: 4px; }
             QCheckBox::indicator { width: 16px; height: 16px; }
@@ -330,6 +335,20 @@ class PriyaDesktop(QMainWindow):
         self.input.setTabChangesFocus(False)
         self.input.send_requested.connect(self.submit)
         compose.addWidget(self.input)
+        media_controls = QHBoxLayout()
+        media_controls.setSpacing(9)
+        self.attach_image_button = self._button("＋ Adicionar imagem", self.add_image_attachments, "MediaButton")
+        self.video_button = self._button("Criar vídeo de fotos", self.create_video_from_dialog, "MediaButton")
+        self.clear_images_button = self._button("Limpar anexos", self.clear_image_attachments, "MediaButton")
+        self.clear_images_button.setEnabled(False)
+        media_controls.addWidget(self.attach_image_button)
+        media_controls.addWidget(self.video_button)
+        media_controls.addWidget(self.clear_images_button)
+        self.media_status = QLabel("Anexe imagens para análise local ou monte um slideshow MP4.")
+        self.media_status.setWordWrap(True)
+        self.media_status.setStyleSheet("color:#8796a8;font-size:8pt")
+        media_controls.addWidget(self.media_status, 1)
+        compose.addLayout(media_controls)
         controls = QHBoxLayout()
         controls.setSpacing(13)
         voice_group = QFrame()
@@ -501,14 +520,95 @@ class PriyaDesktop(QMainWindow):
         self.input.setPlainText(text)
         self.submit()
 
+    def add_image_attachments(self) -> None:
+        selected, _ = QFileDialog.getOpenFileNames(
+            self, "Anexar imagens à conversa", "",
+            "Imagens (*.png *.jpg *.jpeg *.webp *.bmp)",
+        )
+        if not selected:
+            return
+        try:
+            self.image_attachments = validate_image_files([*self.image_attachments, *selected], max_images=4)
+        except MediaError as exc:
+            QMessageBox.warning(self, "Não foi possível anexar", str(exc))
+            return
+        self._refresh_image_attachments()
+
+    def clear_image_attachments(self) -> None:
+        self.image_attachments = []
+        if hasattr(self, "media_status"):
+            self._refresh_image_attachments()
+
+    def _refresh_image_attachments(self) -> None:
+        count = len(self.image_attachments)
+        if count:
+            names = ", ".join(path.name for path in self.image_attachments)
+            self.media_status.setText(f"{count} imagem(ns) pronta(s): {names} · até 4 por mensagem")
+        else:
+            self.media_status.setText("Anexe imagens para análise local ou monte um slideshow MP4.")
+        self.clear_images_button.setEnabled(bool(count) and not self.busy)
+
+    def create_video_from_dialog(self) -> None:
+        selected, _ = QFileDialog.getOpenFileNames(
+            self, "Escolha as fotos para o slideshow", "",
+            "Imagens (*.png *.jpg *.jpeg *.webp *.bmp)",
+        )
+        if not selected:
+            return
+        try:
+            images = validate_image_files(selected, max_images=MAX_VIDEO_IMAGES)
+        except MediaError as exc:
+            QMessageBox.warning(self, "Seleção de imagens", str(exc))
+            return
+        seconds, accepted = QInputDialog.getDouble(
+            self, "Duração das fotos", "Segundos para mostrar cada imagem (1 a 12):", 3.0, 1.0, 12.0, 1,
+        )
+        if not accepted:
+            return
+        output, _ = QFileDialog.getSaveFileName(
+            self, "Salvar vídeo MP4", str(images[0].with_name("priya-slideshow.mp4")), "Vídeo MP4 (*.mp4)",
+        )
+        if not output:
+            return
+        output_path = Path(output)
+        if output_path.suffix.casefold() != ".mp4":
+            output_path = output_path.with_suffix(".mp4")
+        self.busy = True
+        self._set_media_controls_enabled(False)
+        self.send_button.setEnabled(False)
+        self.chat_history.setEnabled(False)
+        self.status_label.setText("CRIANDO VÍDEO LOCAL…")
+        self.media_status.setText(f"Montando slideshow com {len(images)} fotos…")
+
+        def build_video():
+            try:
+                result = {"ok": True, "path": str(create_slideshow_video(images, output_path, seconds))}
+            except Exception as exc:
+                result = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+            self.bridge.event.emit("media_done", result)
+
+        threading.Thread(target=build_video, daemon=True).start()
+
+    def _set_media_controls_enabled(self, enabled: bool) -> None:
+        self.attach_image_button.setEnabled(enabled)
+        self.video_button.setEnabled(enabled)
+        self.clear_images_button.setEnabled(enabled and bool(self.image_attachments))
+
     def submit(self) -> None:
         if self.busy:
             return
         text = self.input.toPlainText().strip()
-        if not text:
+        if not text and not self.image_attachments:
             self.input.setFocus()
             return
+        image_paths = list(self.image_attachments)
+        if image_paths and not text:
+            text = "Descreva as imagens anexadas."
+        display_text = text
+        if image_paths:
+            display_text += "\n\nImagens anexadas: " + ", ".join(path.name for path in image_paths)
         self.input.clear()
+        self.clear_image_attachments()
         command = text.casefold()
         if command in {"/limpar", "/clear"}:
             self.new_conversation()
@@ -516,15 +616,16 @@ class PriyaDesktop(QMainWindow):
         if command in {"/novo", "/new"}:
             self.new_conversation()
             return
-        self._append("Você", text)
+        self._append("Você", display_text)
         self.assistant_pending = True
         self.transcript_rows.append(("Priya", "Priya está pensando…"))
         self._render_transcript()
         self.busy = True
         self.send_button.setEnabled(False)
+        self._set_media_controls_enabled(False)
         self.chat_history.setEnabled(False)
         self.status_label.setText("PROCESSANDO LOCALMENTE…")
-        threading.Thread(target=self._process, args=(text, self.session_id), daemon=True).start()
+        threading.Thread(target=self._process, args=(text, self.session_id, image_paths, display_text), daemon=True).start()
 
     def _confirm_from_worker(self, description: str) -> bool:
         event = threading.Event()
@@ -535,31 +636,47 @@ class PriyaDesktop(QMainWindow):
                 return False
         return bool(request["answer"])
 
-    def _process(self, text: str, session_id: str | None = None) -> None:
+    def _process(
+        self, text: str, session_id: str | None = None,
+        image_paths: list[Path] | None = None, display_text: str | None = None,
+    ) -> None:
         session_id = session_id or self.session_id
+        image_paths = image_paths or []
+        stored_text = display_text or text
         try:
             command = text.casefold()
-            if command in {"/memoria", "/memory"} or is_memory_question(text):
+            if not image_paths and (command in {"/memoria", "/memory"} or is_memory_question(text)):
                 answer = format_all_memory(self.memory)
                 self.memory.add_message(session_id, "user", text)
                 self.memory.add_message(session_id, "assistant", answer)
-            elif command.startswith("/guardar "):
+            elif not image_paths and command.startswith("/guardar "):
                 try:
                     self.memory.remember(text[len("/guardar "):])
                     answer = "Memória salva localmente."
                 except ValueError as exc:
                     answer = f"Não salvei: {exc}"
-                self.memory.add_message(session_id, "user", text)
+                self.memory.add_message(session_id, "user", stored_text)
                 self.memory.add_message(session_id, "assistant", answer)
-            elif command == "/apagar-memoria":
+            elif not image_paths and command == "/apagar-memoria":
                 if self._confirm_from_worker("Apagar todo o histórico e fatos da memória local?"):
                     self.memory.delete_all()
                     answer = "Memória local apagada."
                 else:
                     answer = "Cancelado; memória preservada."
             else:
-                self.memory.add_message(session_id, "user", text)
-                if text.startswith("/"):
+                self.memory.add_message(session_id, "user", stored_text)
+                if image_paths:
+                    previous = self.memory.recent_messages(session_id, limit=24)[:-1]
+                    if not previous and self.inherit_history:
+                        previous = self.memory.recent_messages(None, limit=12)[:-1]
+                    self.inherit_history = False
+                    self.bridge.event.emit("stream_start", None)
+                    answer = self.chat.reply(
+                        previous, text, facts=self.memory.all_facts(),
+                        on_token=lambda token: self.bridge.event.emit("stream_chunk", token),
+                        image_paths=image_paths,
+                    )
+                elif text.startswith("/"):
                     answer = execute_command(text, self.assistant, self.files, self.apps, self._confirm_from_worker)
                 else:
                     answer = answer_simple_math(text)
@@ -611,12 +728,26 @@ class PriyaDesktop(QMainWindow):
             self._append("Priya", payload)
             self.busy = False
             self.send_button.setEnabled(True)
+            self._set_media_controls_enabled(True)
             self.chat_history.setEnabled(True)
             self._refresh_conversations()
             self.status_label.setText("PRONTA · LOCAL")
             self.input.setFocus(Qt.ActiveWindowFocusReason)
             if self.voice_auto and payload.strip():
                 self._speak_text(payload)
+        elif kind == "media_done":
+            self.busy = False
+            self.send_button.setEnabled(True)
+            self._set_media_controls_enabled(True)
+            self.chat_history.setEnabled(True)
+            self.status_label.setText("PRONTA · LOCAL")
+            if payload.get("ok"):
+                output = payload["path"]
+                self.media_status.setText(f"Vídeo MP4 criado: {Path(output).name}")
+                self._append("Sistema", f"Slideshow local criado em:\n{output}")
+            else:
+                self.media_status.setText("Não foi possível criar o vídeo; veja o aviso.")
+                QMessageBox.warning(self, "Criação de vídeo", payload.get("error", "Falha local desconhecida."))
         elif kind == "stream_start":
             self.streaming_text = ""
             self._update_pending_reply("Priya está escrevendo…")
@@ -976,6 +1107,7 @@ class PriyaDesktop(QMainWindow):
     def new_conversation(self) -> None:
         if self.busy:
             return
+        self.clear_image_attachments()
         self.session_id = uuid.uuid4().hex
         self.inherit_history = False
         self.chat_history.blockSignals(True)
@@ -1016,6 +1148,7 @@ class PriyaDesktop(QMainWindow):
         if not session_id:
             return
         messages = self.memory.conversation_messages(str(session_id))
+        self.clear_image_attachments()
         self.session_id = str(session_id)
         self.inherit_history = False
         self.assistant_pending = False

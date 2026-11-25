@@ -24,6 +24,7 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 
 - [Principais recursos](#-principais-recursos)
 - [Capturas e interface](#-capturas-e-interface)
+- [Imagens e vídeos locais](#-imagens-e-videos-locais)
 - [Tecnologias](#-tecnologias)
 - [Como funciona](#-visão-geral-da-arquitetura)
 - [Requisitos](#-requisitos)
@@ -41,6 +42,7 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 | Conversação com IA local | Integração com modelos servidos pelo Ollama. O modelo padrão configurado é `qwen2.5:7b`. |
 | Memória local | Cada conversa fica em uma sessão separada no SQLite; o botão **Memória completa** abre um chat isolado com fatos e histórico disponíveis. |
 | Interface desktop | Aplicação gráfica construída com PySide6 / Qt. |
+| Imagens e vídeo local | Anexa imagens a um modelo de visão local e cria slideshow MP4 com FFmpeg. |
 | Comandos em português | Comandos diretos e interpretação de solicitações para ferramentas locais. |
 | Gerenciamento de arquivos | Ferramentas para listar, buscar, ler, criar, copiar, mover e renomear arquivos. |
 | Aplicativos e janelas | Recursos para abrir aplicativos, listar janelas e interagir com elas mediante confirmação quando aplicável. |
@@ -65,6 +67,14 @@ As capturas usam somente mensagens sintéticas e não incluem conteúdo do banco
 ![Conversa da PRIYA](assets/priya-interface-chat.png)
 
 Recrie as imagens de demonstração localmente com `python scripts\\capture_ui_previews.py`.
+
+## 🎞️ Imagens e vídeos locais
+
+- **Adicionar imagem** aceita PNG, JPG/JPEG, WEBP e BMP. Anexe até 4 imagens (15 MiB cada e 20 MiB no total) e escreva sua pergunta. Os arquivos são enviados somente ao Ollama em loopback; não são copiados ao SQLite.
+- Para interpretação visual, instale uma vez um modelo de visão compatível, por exemplo `ollama pull qwen2.5vl:3b`. A Priya detecta modelos locais conhecidos ou usa `vision_model` em `config.json` / `PRIA_VISION_MODEL`. Sem um modelo compatível, informa a limitação sem iniciar downloads durante o chat.
+- Depois da análise visual, o Ollama recebe instrução para descarregar o modelo (keep-alive zero), reduzindo disputa de RAM e VRAM com o modelo de texto. A qualidade depende do modelo e não é garantida.
+- **Criar vídeo de fotos** gera um slideshow MP4 de até 20 imagens (300 MiB no total), 1 a 12 segundos por foto, resolução 1280×720. Usa FFmpeg local e não envia nada para a nuvem. O recurso cria uma sequência de fotos, sem animação generativa, narração, música ou transições. Não sobrescreve arquivos existentes.
+- O instalador de dependências adiciona `imageio-ffmpeg`, que disponibiliza o FFmpeg local. A instalação precisa de internet uma vez; a criação de MP4 funciona depois sem rede.
 
 ## 🧰 Tecnologias
 
@@ -156,6 +166,7 @@ Exemplo de configuração:
 {
   "base_url": "http://127.0.0.1:11434",
   "model": "qwen2.5:7b",
+  "vision_model": "",
   "timeout_seconds": 180,
   "context_window": 4096,
   "max_response_tokens": 256
@@ -168,6 +179,7 @@ Variáveis de ambiente reconhecidas:
 |---|---|
 | `PRIA_OLLAMA_URL` | Endereço do serviço Ollama |
 | `PRIA_MODEL` | Nome do modelo utilizado |
+| `PRIA_VISION_MODEL` | Modelo local opcional para analisar imagens |
 | `PRIA_TIMEOUT` | Tempo limite das requisições |
 | `PRIA_CONTEXT` | Tamanho da janela de contexto |
 | `PRIA_MAX_RESPONSE_TOKENS` | Limite padrão de tokens da resposta |

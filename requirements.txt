@@ -1,0 +1,11 @@
+# PRIA roda o LLM local via Ollama e não usa APIs comerciais.
+# Instale com o mesmo Python do iniciar-gui.cmd.
+PyMuPDF>=1.24,<2
+python-docx>=1.1,<2
+sounddevice>=0.4,<1
+vosk==0.3.45
+piper-tts>=1.2,<2
+pywinauto>=0.6.8,<1
+PySide6-Essentials>=6.6,<7
+imageio-ffmpeg>=0.6,<1
+
