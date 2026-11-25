@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pria.core.agent import LocalAgent
 from pria.tools.applications import ApplicationLauncher
-from pria.tools.files import FileTools
+from pria.tools.files import FileToolError, FileTools
 
 
 class FakeChat:
@@ -79,6 +79,29 @@ class LocalAgentTests(unittest.TestCase):
         self.assertIn("cancelada", answer.casefold())
         services.return_value.stop.assert_not_called()
 
+    def test_tool_answer_includes_exact_observed_result(self):
+        chat = FakeChat([
+            {"action": "tool", "tool_name": "list_directory", "arguments": {"path": "C:\\PRIA"}, "message": ""},
+            {"action": "answer", "message": "A pasta contém nota.txt.", "tool_name": "", "arguments": {}},
+        ])
+        agent = LocalAgent(chat, FileTools(), ApplicationLauncher())
+        with patch.object(agent.files, "list_directory", return_value=[Path("C:/PRIA/nota.txt")]):
+            answer = agent.respond([], "Liste os arquivos em C:\\PRIA")
+        self.assertIn("Resultado observado pelas ferramentas locais", answer)
+        self.assertIn("nota.txt", answer)
+
+    def test_tool_failure_cannot_be_reported_as_success_by_model(self):
+        chat = FakeChat([
+            {"action": "tool", "tool_name": "list_directory", "arguments": {"path": "C:\\missing"}, "message": ""},
+            {"action": "answer", "message": "Concluído com sucesso!", "tool_name": "", "arguments": {}},
+        ])
+        agent = LocalAgent(chat, FileTools(), ApplicationLauncher())
+        with patch.object(agent.files, "list_directory", side_effect=FileToolError("acesso negado")):
+            answer = agent.respond([], "Liste os arquivos em C:\\missing")
+        self.assertIn("Não consegui concluir", answer)
+        self.assertNotIn("Concluído com sucesso", answer)
+
 
 if __name__ == "__main__":
     unittest.main()
+

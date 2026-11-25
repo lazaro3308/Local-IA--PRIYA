@@ -11,7 +11,7 @@ from html import escape
 from PySide6.QtCore import Qt, Signal, QObject, QTimer, QSettings
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QKeyEvent, QPainter, QPen, QIcon, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+    QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QScrollArea,
     QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QScrollBar,
     QSizePolicy, QSlider, QStackedWidget, QTextBrowser, QVBoxLayout, QWidget, QDialog, QListWidgetItem,
 )
@@ -142,30 +142,36 @@ class PriyaDesktop(QMainWindow):
             QMainWindow, QWidget#Root { background: #08090d; color: #ecebf0; }
             QLabel { color: #dedde3; background: transparent; }
             QFrame#Sidebar { background: #0d0e13; border: none; }
-            QFrame#Composer { background: #111218; border: 1px solid #30313a; border-radius: 17px; }
-            QFrame#Composer:focus-within { border: 1px solid #d93b4b; }
-            QTextBrowser#Transcript { background: #0c0d12; color: #ecebf0; border: 1px solid #23242c; border-radius: 15px; padding: 20px; selection-background-color: #4b1821; }
-            QWidget#Welcome { background: #0c0d12; border: 1px solid #24252e; border-radius: 15px; }
+            QScrollArea#SidebarScroll { background: #0d0e13; border: none; }
+            QWidget#SidebarContent { background: #0d0e13; }
+            QFrame#Composer { background: #111218; border: 1px solid #34343e; border-radius: 18px; }
+            QFrame#Composer:focus-within { border: 1px solid #d94857; }
+            QFrame#VoiceControls { background: #0d0e13; border: 1px solid #292a33; border-radius: 12px; }
+            QTextBrowser#Transcript { background: #0c0d12; color: #ecebf0; border: 1px solid #292a33; border-radius: 16px; padding: 22px; selection-background-color: #4b1821; }
+            QWidget#Welcome { background: #0c0d12; border: 1px solid #292a33; border-radius: 16px; }
             QPlainTextEdit#MessageBox { background: #0d0e13; color: #f5f3f4; border: 1px solid #2b2c35; border-radius: 11px; padding: 13px; selection-background-color: #4b1821; font-size: 14px; }
             QPlainTextEdit#MessageBox:focus { border: 1px solid #cf3948; background: #101117; }
-            QPushButton { background: #17181f; color: #dedde3; border: 1px solid #30313a; border-radius: 9px; padding: 10px 13px; font-size: 10pt; }
-            QPushButton:hover { background: #22232c; border-color: #74303a; color: #fff4f4; }
+            QPushButton { background: #17181f; color: #dedde3; border: 1px solid #343540; border-radius: 10px; padding: 10px 15px; font-size: 10pt; }
+            QPushButton:hover { background: #22232c; border-color: #87404a; color: #fff4f4; }
+            QPushButton:focus { border: 1px solid #42cbd9; }
             QPushButton:disabled { background: #121319; color: #6f7079; }
-            QPushButton#SidebarButton { text-align: left; padding: 7px 10px; font-size: 9pt; }
+            QPushButton#SidebarButton { min-height: 40px; text-align: left; padding: 8px 12px; font-size: 9pt; }
             QPushButton#SidebarButton:hover { border-left: 2px solid #df3e4e; }
+            QPushButton#MemoryButton { background: #21151a; color: #f0bdc3; border-color: #56313a; }
+            QPushButton#MemoryButton:hover { background: #301a21; border-color: #a44a57; }
             QPushButton#SidebarToggle { background: transparent; border: 1px solid #30313a; color: #e04452; font-size: 16pt; padding: 0; }
             QPushButton#SidebarToggle:hover { background: #1a1419; border-color: #91404a; }
-            QPushButton#SendButton { background: #c93143; color: #fff7f7; border: 1px solid #e04755; font-weight: 700; padding: 11px 17px; }
+            QPushButton#SendButton { min-height: 42px; min-width: 166px; background: #c93143; color: #fff7f7; border: 1px solid #e04755; font-weight: 700; padding: 11px 17px; }
             QPushButton#SendButton:hover { background: #e44251; border-color: #ff6974; }
             QPushButton#Suggestion { background: #13141a; color: #e3e1e6; border: 1px solid #30313a; border-radius: 11px; padding: 14px 15px; text-align: left; font-size: 10pt; }
             QPushButton#Suggestion:hover { background: #1a1419; border-color: #91404a; }
             QLineEdit { background: #111218; color: #f1f0f2; border: 1px solid #30313a; border-radius: 9px; padding: 10px; }
-            QCheckBox { color: #b6c3d2; spacing: 7px; }
+            QCheckBox { color: #b6c3d2; spacing: 10px; min-height: 40px; padding-left: 4px; }
             QCheckBox::indicator { width: 16px; height: 16px; }
             QCheckBox::indicator:unchecked { background: #101722; border: 1px solid #40566c; border-radius: 4px; }
             QCheckBox::indicator:checked { background: #35dfff; border: 1px solid #35dfff; border-radius: 4px; }
-            QListWidget { background: #101117; color: #e3e1e6; border: 1px solid #292a33; border-radius: 9px; padding: 4px; outline: none; }
-            QListWidget::item { padding: 8px 9px; border-radius: 6px; }
+            QListWidget { background: #101117; color: #e3e1e6; border: 1px solid #292a33; border-radius: 11px; padding: 6px; outline: none; }
+            QListWidget::item { margin: 3px 1px; padding: 10px 11px; border-radius: 8px; }
             QListWidget::item:hover { background: #1a1b23; }
             QListWidget::item:selected { background: #35151b; color: #fff0f1; border-left: 2px solid #df3e4e; }
             QScrollBar:vertical { background: #0d0e13; width: 8px; margin: 0; }
@@ -187,9 +193,19 @@ class PriyaDesktop(QMainWindow):
         sidebar.setObjectName("Sidebar")
         sidebar.setFixedWidth(248)
         self.sidebar_panel = sidebar
-        side = QVBoxLayout(sidebar)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setContentsMargins(0, 0, 0, 0)
+        sidebar_layout.setSpacing(0)
+        self.sidebar_scroll = QScrollArea(sidebar)
+        self.sidebar_scroll.setObjectName("SidebarScroll")
+        self.sidebar_scroll.setWidgetResizable(True)
+        self.sidebar_scroll.setFrameShape(QFrame.NoFrame)
+        self.sidebar_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        sidebar_content = QWidget()
+        sidebar_content.setObjectName("SidebarContent")
+        side = QVBoxLayout(sidebar_content)
         side.setContentsMargins(20, 22, 20, 20)
-        side.setSpacing(7)
+        side.setSpacing(9)
         brand = QHBoxLayout()
         name = QLabel("Priya")
         name.setStyleSheet("color:#f1eff1;font-size:27px;font-weight:700;letter-spacing:-0.7px")
@@ -213,7 +229,7 @@ class PriyaDesktop(QMainWindow):
         side.addWidget(model)
         side.addSpacing(12)
         self._side_button(side, "Nova conversa", self.new_conversation)
-        history_label = QLabel("SEUS CHATS")
+        history_label = QLabel("SUAS CONVERSAS")
         history_label.setStyleSheet("color:#8fa0b4;font-size:8pt;font-weight:700;letter-spacing:1px;margin-top:5px")
         side.addWidget(history_label)
         self.chat_history = QListWidget()
@@ -222,13 +238,14 @@ class PriyaDesktop(QMainWindow):
         self.chat_history.setToolTip("Abra uma conversa anterior. As mensagens ficam juntas por conversa.")
         self.chat_history.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.chat_history.setTextElideMode(Qt.ElideRight)
-        self.chat_history.setMinimumHeight(110)
+        self.chat_history.setMinimumHeight(135)
+        self.chat_history.setSpacing(3)
         self.chat_history.currentItemChanged.connect(self._history_item_selected)
         side.addWidget(self.chat_history, 1)
         side.addSpacing(12)
         self._side_button(side, "Aplicativos", self.show_apps)
         self._side_button(side, "Microfone", self.show_microphones)
-        self._side_button(side, "Mostrar memória", lambda: self.submit_text("/memoria"))
+        self._side_button(side, "Memória completa", self.open_memory_conversation, "MemoryButton")
         self._side_button(side, "Ajuda", lambda: self.submit_text("/ajuda"))
         self._side_button(side, "Autoaperfeiçoar código", self.show_self_improvement)
         side.addSpacing(14)
@@ -248,10 +265,13 @@ class PriyaDesktop(QMainWindow):
         volume.setValue(100)
         volume.valueChanged.connect(lambda value: setattr(self, "voice_volume", value / 100))
         side.addWidget(volume)
-        offline = QLabel("OFFLINE READY\n\nChat, voz, memória e arquivos são locais. A leitura web precisa de internet.")
+        offline = QLabel("●  OFFLINE · LOCAL\n\nChat, voz, memória e arquivos ficam neste computador. A leitura web precisa de internet.")
+        offline.setObjectName("OfflineStatus")
         offline.setWordWrap(True)
-        offline.setStyleSheet("color:#8292a6;font-size:9pt")
+        offline.setStyleSheet("color:#8e9eaf;background:#101713;border:1px solid #26382f;border-radius:10px;padding:10px;font-size:9pt")
         side.addWidget(offline)
+        self.sidebar_scroll.setWidget(sidebar_content)
+        sidebar_layout.addWidget(self.sidebar_scroll)
         shell.addWidget(sidebar)
 
         separator = QFrame()
@@ -262,8 +282,8 @@ class PriyaDesktop(QMainWindow):
 
         content = QWidget()
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(26, 18, 26, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(28, 22, 28, 18)
+        layout.setSpacing(14)
         header = QHBoxLayout()
         self.sidebar_toggle = self._button("‹", self.toggle_sidebar, "SidebarToggle")
         self.sidebar_toggle.setFixedSize(38, 36)
@@ -297,25 +317,36 @@ class PriyaDesktop(QMainWindow):
         composer = QFrame()
         composer.setObjectName("Composer")
         compose = QVBoxLayout(composer)
-        compose.setContentsMargins(15, 12, 15, 12)
-        compose.setSpacing(9)
+        compose.setContentsMargins(18, 15, 18, 15)
+        compose.setSpacing(12)
         input_label = QLabel("MENSAGEM")
         input_label.setStyleSheet("color:#7f95aa;font-size:8pt;font-weight:700;letter-spacing:1px")
         compose.addWidget(input_label)
         self.input = MessageBox()
         self.input.setObjectName("MessageBox")
         self.input.setPlaceholderText("Escreva sua mensagem para a Priya aqui…")
-        self.input.setMinimumHeight(78)
-        self.input.setMaximumHeight(120)
+        self.input.setMinimumHeight(88)
+        self.input.setMaximumHeight(140)
         self.input.setTabChangesFocus(False)
         self.input.send_requested.connect(self.submit)
         compose.addWidget(self.input)
         controls = QHBoxLayout()
+        controls.setSpacing(13)
+        voice_group = QFrame()
+        voice_group.setObjectName("VoiceControls")
+        voice_controls = QHBoxLayout(voice_group)
+        voice_controls.setContentsMargins(6, 5, 6, 5)
+        voice_controls.setSpacing(8)
         self.voice_button = self._button("Falar", self.toggle_voice)
-        controls.addWidget(self.voice_button)
+        self.voice_button.setMinimumHeight(40)
+        voice_controls.addWidget(self.voice_button)
         self.speak_button = self._button("Ouvir resposta", self.speak_last)
-        controls.addWidget(self.speak_button)
-        controls.addWidget(self._button("Parar voz", self.stop_voice))
+        self.speak_button.setMinimumHeight(40)
+        voice_controls.addWidget(self.speak_button)
+        self.stop_voice_button = self._button("Parar voz", self.stop_voice)
+        self.stop_voice_button.setMinimumHeight(40)
+        voice_controls.addWidget(self.stop_voice_button)
+        controls.addWidget(voice_group)
         self.auto_voice = QCheckBox("Falar respostas")
         self.auto_voice.setChecked(self.voice_auto)
         self.auto_voice.setToolTip("Reproduz cada resposta da Priya com a voz local Piper.")
@@ -399,9 +430,16 @@ class PriyaDesktop(QMainWindow):
         button.clicked.connect(callback)
         return button
 
-    def _side_button(self, layout: QVBoxLayout, text: str, callback) -> None:
-        button = self._button(text, callback, "SidebarButton")
+    def _side_button(self, layout: QVBoxLayout, text: str, callback, object_name: str = "SidebarButton") -> None:
+        button = self._button(text, callback, object_name)
         layout.addWidget(button)
+
+    def open_memory_conversation(self) -> None:
+        """Show the complete local memory in its own saved conversation."""
+        if self.busy:
+            return
+        self.new_conversation()
+        self.submit_text("Mostre toda a sua memória")
 
     def toggle_sidebar(self) -> None:
         self._set_sidebar_visible(not self.sidebar_panel.isVisible(), persist=True)
@@ -960,7 +998,8 @@ class PriyaDesktop(QMainWindow):
         for conversation in self.memory.list_conversations():
             item = QListWidgetItem(conversation["title"])
             item.setData(Qt.UserRole, conversation["session_id"])
-            item.setToolTip(conversation["title"])
+            updated = conversation.get("updated_at", "")
+            item.setToolTip(f"{conversation['title']}\nAtualizada: {updated}" if updated else conversation["title"])
             self.chat_history.addItem(item)
             if conversation["session_id"] == selected_id:
                 selected = item
@@ -1019,3 +1058,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
