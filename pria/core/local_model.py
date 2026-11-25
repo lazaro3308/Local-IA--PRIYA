@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import base64
 from collections.abc import Callable
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pria.config import Settings
+from pria.tools.media import MediaError, validate_image_files
 
 
 class LocalModelError(RuntimeError):
@@ -33,6 +36,26 @@ class LocalChat:
     def __init__(self, settings: Settings):
         self.settings = settings
 
+    def _vision_model_for_images(self) -> str:
+        if self.settings.vision_model:
+            return self.settings.vision_model
+        request = Request(f"{self.settings.base_url}/api/tags", method="GET")
+        try:
+            with urlopen(request, timeout=min(8, self.settings.timeout_seconds)) as response:
+                available = json.loads(response.read().decode("utf-8")).get("models", [])
+        except (URLError, TimeoutError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise LocalModelError(f"Não consegui localizar um modelo de visão no Ollama local: {exc}") from exc
+        markers = ("qwen2.5vl", "qwen2.5-vl", "qwen3-vl", "llama3.2-vision", "llava", "minicpm-v", "gemma3")
+        names = [str(item.get("name", item.get("model", ""))) for item in available if isinstance(item, dict)]
+        for marker in markers:
+            match = next((name for name in names if marker in name.casefold()), None)
+            if match:
+                return match
+        raise LocalModelError(
+            "Recebi a imagem, mas não há um modelo de visão local instalado. Instale um modelo como "
+            "qwen2.5vl:3b no Ollama; nenhum download será iniciado durante a conversa."
+        )
+
     def reply(
         self,
         messages: list[dict[str, str]],
@@ -41,6 +64,7 @@ class LocalChat:
         on_token: Callable[[str], None] | None = None,
         response_token_limit: int | None = None,
         temperature: float = 0.4,
+        image_paths: list[str | Path] | None = None,
     ) -> str:
         system_prompt = SYSTEM_PROMPT
         if facts:
@@ -49,12 +73,22 @@ class LocalChat:
         context = [{"role": "system", "content": system_prompt}]
         # Shorter prompts avoid re-prefilling a large local model on every turn.
         context.extend(messages[-12:])
-        context.append({"role": "user", "content": user_text})
+        user_message = {"role": "user", "content": user_text}
+        model_name = self.settings.model
+        if image_paths:
+            try:
+                images = validate_image_files(list(image_paths), max_images=4)
+            except MediaError as exc:
+                raise LocalModelError(str(exc)) from exc
+            user_message["images"] = [base64.b64encode(path.read_bytes()).decode("ascii") for path in images]
+            model_name = self._vision_model_for_images()
+        context.append(user_message)
         payload = {
-            "model": self.settings.model,
+            "model": model_name,
             "messages": context,
             "stream": on_token is not None,
-            "keep_alive": "10m",
+            # Vision requests are occasional and can compete with the text model for RAM/VRAM.
+            "keep_alive": "0" if image_paths else "10m",
             "options": {
                 "num_ctx": self.settings.context_window,
                 "num_predict": min(4096, response_token_limit or self.settings.max_response_tokens),

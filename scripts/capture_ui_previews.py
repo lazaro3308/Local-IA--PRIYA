@@ -55,6 +55,18 @@ def main() -> int:
         if not window.grab().save(str(welcome_path)):
             raise RuntimeError(f"Não foi possível salvar {welcome_path}")
 
+        window.resize(1440, 560)
+        app.processEvents()
+        window._update_welcome_density()
+        app.processEvents()
+        if window.welcome_scroll.verticalScrollBar().maximum() > 2:
+            raise RuntimeError("A tela compacta ainda excede a altura disponível.")
+        compact_path = ASSETS / "priya-interface-compact.png"
+        if not window.grab().save(str(compact_path)):
+            raise RuntimeError(f"Não foi possível salvar {compact_path}")
+
+        window.resize(1440, 900)
+        app.processEvents()
         window.session_id = "demo-privacy"
         window.transcript_rows = [
             ("Você" if message["role"] == "user" else "Priya", message["content"])
@@ -81,6 +93,7 @@ def main() -> int:
         window.close()
         app.processEvents()
     print(welcome_path)
+    print(compact_path)
     print(chat_path)
     return 0
 

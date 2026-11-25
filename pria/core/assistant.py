@@ -13,7 +13,7 @@ class Assistant:
                 "Comandos: /ajuda, /sobre, /listar [pasta], /buscar <nome ou padrão> [pasta], "
                 "/ler <TXT/PDF/DOCX>, /ler-web <URL pública>, /abrir <arquivo ou pasta>, /abrir-app <nome>, "
                 "/apps, /janelas, /ativar-janela, /digitar \"janela\" \"texto\", /clique x y [left|right|double], /fechar-janela, /web <URL>, /criar-pasta, /criar-arquivo, /copiar, /mover, /renomear, /apagar, "
-                "/powershell, /guardar, /memoria, /apagar-memoria, /novo, /limpar e /sair. Também posso entender pedidos em português livre."
+                "/powershell, /guardar, /memoria, /apagar-memoria, /novo, /limpar e /sair. Na interface, use Adicionar imagem para análise com um modelo de visão local ou Criar vídeo de fotos para montar um MP4. Também posso entender pedidos em português livre."
             )
         if command in {"/sobre", "/about"}:
             return (
@@ -23,3 +23,4 @@ class Assistant:
         return (
             "Esse comando não existe. Digite /ajuda para ver os comandos locais disponíveis."
         )
+

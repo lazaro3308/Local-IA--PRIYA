@@ -19,6 +19,7 @@ class Settings:
     timeout_seconds: int = 180
     context_window: int = 4096
     max_response_tokens: int = 256
+    vision_model: str = ""
 
 
 def load_settings(path: Path | None = None) -> Settings:
@@ -36,9 +37,11 @@ def load_settings(path: Path | None = None) -> Settings:
     timeout = int(os.getenv("PRIA_TIMEOUT", values.get("timeout_seconds", Settings.timeout_seconds)))
     context = int(os.getenv("PRIA_CONTEXT", values.get("context_window", Settings.context_window)))
     max_tokens = int(os.getenv("PRIA_MAX_RESPONSE_TOKENS", values.get("max_response_tokens", Settings.max_response_tokens)))
+    vision_model = os.getenv("PRIA_VISION_MODEL", str(values.get("vision_model", ""))).strip()
     parsed = urlparse(base_url)
     if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost", "::1"} or not parsed.port:
         raise ValueError("O serviço do modelo deve usar HTTP em localhost/loopback com porta explícita.")
     if not model or timeout < 1 or context < 256 or max_tokens < 1:
         raise ValueError("Modelo, timeout, contexto ou limite de resposta inválido.")
-    return Settings(base_url, model, timeout, context, max_tokens)
+    return Settings(base_url, model, timeout, context, max_tokens, vision_model)
+

@@ -43,7 +43,7 @@ def main() -> int:
             print(f"GPU NVIDIA: consulta falhou ({exc})")
     else:
         print("GPU NVIDIA: nvidia-smi não encontrado; GPU dedicada não confirmada")
-    for module in ("fitz", "docx", "sounddevice", "vosk", "piper", "pywinauto"):
+    for module in ("fitz", "docx", "sounddevice", "vosk", "piper", "pywinauto", "imageio_ffmpeg"):
         print(f"Dependência {module}: {'OK' if importlib.util.find_spec(module) else 'ausente'}")
     print(f"Vosk pt-BR: {'OK' if (default_model_dir() / 'final.mdl').is_file() else 'ausente'} ({default_model_dir()})")
     print(f"Piper pt-BR: {'OK' if voice_path().is_file() else 'ausente'} ({voice_path()})")
@@ -51,7 +51,12 @@ def main() -> int:
     if ollama:
         try:
             result = subprocess.run([ollama, "list"], capture_output=True, text=True, timeout=8, check=False)
-            print("Modelos Ollama locais:\n" + (result.stdout.strip() or result.stderr.strip() or "nenhum listado"))
+            listing = result.stdout.strip() or result.stderr.strip() or "nenhum listado"
+            print("Modelos Ollama locais:\n" + listing)
+            markers = ("qwen2.5vl", "qwen2.5-vl", "qwen3-vl", "llama3.2-vision", "llava", "minicpm-v", "gemma3")
+            models = [line.split()[0].casefold() for line in listing.splitlines()[1:] if line.split()]
+            vision = [name for name in models if any(marker in name for marker in markers)]
+            print("Modelo de visão: " + (", ".join(vision) if vision else "ausente; texto continua funcionando"))
         except Exception as exc:
             print(f"Ollama: consulta falhou ({exc})")
     else:
@@ -67,3 +72,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

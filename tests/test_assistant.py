@@ -8,7 +8,10 @@ class AssistantTests(unittest.TestCase):
         self.assistant = Assistant()
 
     def test_help_is_available(self):
-        self.assertIn("/ajuda", self.assistant.respond("/ajuda"))
+        answer = self.assistant.respond("/ajuda")
+        self.assertIn("/ajuda", answer)
+        self.assertIn("Adicionar imagem", answer)
+        self.assertIn("Criar vídeo de fotos", answer)
 
     def test_about_reports_local_model_and_explicit_tools(self):
         answer = self.assistant.respond("/sobre")
@@ -22,3 +25,4 @@ class AssistantTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
