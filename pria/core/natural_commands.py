@@ -11,6 +11,7 @@ from pria.tools.files import FileToolError, FileTools, format_entries
 from pria.tools.web import WebToolError, extract_web_page, open_web_page
 from pria.tools.windows_automation import WindowsAutomation, WindowsAutomationError
 from pria.tools.windows_services import ServiceControlError, WindowsServices
+from pria.tools.system_monitor import SystemMonitorError, system_report
 
 
 def _argument(value: str) -> str:
@@ -51,6 +52,7 @@ def execute_obvious_local_request(text: str, files: FileTools, apps: Application
         ("service_status", re.compile(r"^(?:por favor[, ]*)?(?:qual o )?(?:status|estado|situa[cç][aã]o)\s+(?:do\s+)?servi[cç]o\s+(.+)$", re.I)),
         ("service_start", re.compile(r"^(?:por favor[, ]*)?(?:inicie|iniciar|ligue)\s+(?:o\s+)?servi[cç]o\s+(.+)$", re.I)),
         ("service_stop", re.compile(r"^(?:por favor[, ]*)?(?:pare|parar|interrompa)\s+(?:o\s+)?servi[cç]o\s+(.+)$", re.I)),
+        ("system_info", re.compile(r"^(?:qual|quais|quanto|como|mostre|verifique|consulte|liste)\b.*\b(?:computador|pc|hardware|ram|mem[oó]ria(?:\s+ram)?|processador|cpu|placa de v[ií]deo|gpu|disco)\b.*[?.!]*$", re.I)),
         ("open_app", re.compile(r"^(?:por favor[, ]*)?(?:abra|abre|abrir|inicie|inicia|iniciar|execute)\s+(?:o\s+)?(?:app|aplicativo|programa)\s+(.+)$", re.I)),
         ("open_path", re.compile(r"^(?:por favor[, ]*)?(?:abra|abre|abrir)\s+(?:o\s+arquivo|a\s+pasta)\s+(.+)$", re.I)),
         ("open_app_guess", re.compile(r"^(?:por favor[, ]*)?(?:abra|abre|abrir|inicie|inicia|iniciar)\s+(?:o\s+)?([^?.!]+)$", re.I)),
@@ -89,6 +91,8 @@ def execute_obvious_local_request(text: str, files: FileTools, apps: Application
                 return files.read_document(value)
             if action == "read_web":
                 return extract_web_page(value)
+            if action == "system_info":
+                return system_report()
             if action == "windows_list":
                 return "Janelas visíveis:\n" + "\n".join(WindowsAutomation().list_windows())
             if action == "windows_activate":
@@ -157,8 +161,9 @@ def execute_obvious_local_request(text: str, files: FileTools, apps: Application
                 if confirm is None or not confirm(f"Apagar este arquivo ou pasta vazia? {value}"):
                     return "Exclusão cancelada; nada foi apagado."
                 return files.delete_path(value, confirmed=True)
-        except (FileToolError, ApplicationToolError, WebToolError, WindowsAutomationError) as exc:
+        except (FileToolError, ApplicationToolError, WebToolError, WindowsAutomationError, SystemMonitorError) as exc:
             return f"Não concluído: {exc}"
         except ServiceControlError as exc:
             return f"Não concluído: {exc}"
     return None
+

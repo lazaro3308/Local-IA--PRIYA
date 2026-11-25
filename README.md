@@ -23,6 +23,7 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 ## Índice
 
 - [Principais recursos](#-principais-recursos)
+- [Capturas e interface](#-capturas-e-interface)
 - [Tecnologias](#-tecnologias)
 - [Como funciona](#-visão-geral-da-arquitetura)
 - [Requisitos](#-requisitos)
@@ -38,7 +39,7 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 | Recurso | Descrição |
 |---|---|
 | Conversação com IA local | Integração com modelos servidos pelo Ollama. O modelo padrão configurado é `qwen2.5:7b`. |
-| Memória local | Histórico de conversas e memórias explícitas persistidos em SQLite. |
+| Memória local | Cada conversa fica em uma sessão separada no SQLite; o botão **Memória completa** abre um chat isolado com fatos e histórico disponíveis. |
 | Interface desktop | Aplicação gráfica construída com PySide6 / Qt. |
 | Comandos em português | Comandos diretos e interpretação de solicitações para ferramentas locais. |
 | Gerenciamento de arquivos | Ferramentas para listar, buscar, ler, criar, copiar, mover e renomear arquivos. |
@@ -48,6 +49,22 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 | Leitura de páginas públicas | Extração de conteúdo textual de URLs HTTP(S), recurso que requer conexão com a internet. |
 | Voz opcional | Integração com Vosk (reconhecimento) e Piper (síntese), quando dependências e modelos estão instalados. |
 | Autoaperfeiçoamento experimental | Propostas de alteração sujeitas a confirmação, backup e testes locais. |
+| Informações locais verificadas | Consulta RAM, CPU, discos e GPUs no Windows; mostra VRAM NVIDIA quando disponível. |
+
+
+## 🖼️ Capturas e interface
+
+A interface mantém o tema escuro com acentos discretos em ciano e vermelho, organiza os controles de voz em um grupo com mais espaço entre botões e permite recolher a lateral. Em telas menores, a lateral pode ser rolada para manter os controles separados.
+
+Cada entrada do histórico abre uma conversa própria; **Nova conversa** inicia outra sessão. **Memória completa** cria uma conversa separada com os fatos guardados e o histórico local disponível, sem misturar o conteúdo com os chats anteriores.
+
+As capturas usam somente mensagens sintéticas e não incluem conteúdo do banco de dados pessoal.
+
+![Tela inicial da PRIYA](assets/priya-interface-welcome.png)
+
+![Conversa da PRIYA](assets/priya-interface-chat.png)
+
+Recrie as imagens de demonstração localmente com `python scripts\\capture_ui_previews.py`.
 
 ## 🧰 Tecnologias
 
@@ -204,6 +221,7 @@ O projeto foi estruturado com foco em execução local, mas recursos opcionais p
 - O acesso web valida URLs e bloqueia destinos locais/privados.
 - Conteúdo de arquivos e páginas externas deve ser tratado como dado não confiável.
 - O código produzido pela ferramenta de apoio à programação não deve ser executado automaticamente.
+- Respostas que usam ferramentas locais mostram o resultado observado; falhas são identificadas como falhas.
 
 **Importante:** automações e comandos do sistema podem modificar arquivos, janelas ou configurações do computador. Revise cada ação antes de autorizá-la. Não utilize a aplicação com permissões elevadas sem necessidade.
 

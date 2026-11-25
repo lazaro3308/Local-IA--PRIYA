@@ -20,7 +20,10 @@ class DesktopInputTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
 
     def test_composer_accepts_keyboard_input_and_has_real_send_controls(self):
-        window = PriyaDesktop()
+        # Use in-memory defaults so this test never reads or changes the user's saved preferences.
+        with patch("pria.interface.desktop.QSettings") as preferences:
+            preferences.return_value.value.side_effect = lambda _key, default=None, **_kwargs: default
+            window = PriyaDesktop()
         window.show()
         self.app.processEvents()
         self.assertIs(window.screen_stack.currentWidget(), window.welcome)
@@ -108,6 +111,29 @@ class DesktopInputTests(unittest.TestCase):
         window.close()
         window.deleteLater()
 
+    def test_memory_button_starts_a_separate_memory_conversation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            memory = LocalMemory(Path(temp) / "memory.sqlite3")
+            memory.add_message("old-chat", "user", "Conversa que deve continuar salva")
+            memory.add_message("old-chat", "assistant", "Resposta preservada")
+            with patch("pria.interface.desktop.LocalMemory", return_value=memory):
+                window = PriyaDesktop()
+            window.session_id = "old-chat"
+            old_messages = memory.conversation_messages("old-chat")
+            with patch.object(window, "submit_text") as submit:
+                memory_button = next(
+                    button for button in window.findChildren(QPushButton)
+                    if button.text() == "Memória completa"
+                )
+                memory_button.click()
+            self.assertNotEqual(window.session_id, "old-chat")
+            submit.assert_called_once_with("Mostre toda a sua memória")
+            self.assertEqual(memory.conversation_messages("old-chat"), old_messages)
+            window.closing = True
+            window.close()
+            window.deleteLater()
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -46,6 +46,14 @@ class NaturalCommandTests(unittest.TestCase):
         self.assertTrue(requests_local_action("Abra o aplicativo Calculadora"))
         self.assertTrue(requests_local_action("Mexa no meu computador"))
 
+    def test_hardware_question_uses_measured_local_system_info(self):
+        with patch("pria.core.natural_commands.system_report", return_value="RAM medida: 16 GB") as report:
+            answer = execute_obvious_local_request(
+                "Qual a memória RAM do computador?", FileTools(), NoApps()
+            )
+        self.assertEqual(answer, "RAM medida: 16 GB")
+        report.assert_called_once_with()
+
     def test_natural_create_and_delete_require_confirmation_for_delete(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "nota.txt"
@@ -77,3 +85,4 @@ class NaturalCommandTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

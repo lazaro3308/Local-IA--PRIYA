@@ -16,6 +16,7 @@ from pria.tools.powershell import PowerShellError, PowerShellTool
 from pria.tools.web import WebToolError, extract_web_page, open_web_page
 from pria.tools.windows_automation import WindowsAutomation, WindowsAutomationError
 from pria.tools.windows_services import ServiceControlError, WindowsServices
+from pria.tools.system_monitor import SystemMonitorError, system_report
 
 
 class LocalAgent:
@@ -55,6 +56,7 @@ class LocalAgent:
             "service_status": "argumentos {name}; consulta estado atual de um serviço Windows",
             "start_service": "argumentos {name}; iniciar exige confirmação e usa privilégios atuais",
             "stop_service": "argumentos {name}; parar exige confirmação e usa privilégios atuais",
+            "system_info": "argumentos {}; lê diretamente sistema, processador, RAM, espaço em disco e nomes das GPUs deste computador",
         }
         app_names = ", ".join(self.apps.names()[:80])
         descriptions["open_app"] += f"; atalhos disponíveis: {app_names}"
@@ -151,6 +153,8 @@ class LocalAgent:
         if tool_name == "list_windows":
             windows = WindowsAutomation().list_windows()
             return "Janelas visíveis:\n" + ("\n".join(windows) if windows else "(nenhuma janela visível)")
+        if tool_name == "system_info":
+            return system_report()
         if tool_name == "activate_window":
             title = arguments.get("title")
             if not isinstance(title, str):
@@ -247,6 +251,7 @@ class LocalAgent:
             "service_status": ("status do servico", "estado do servico", "situacao do servico", "verifique o servico"),
             "start_service": ("inicie o servico", "iniciar o servico", "ligue o servico"),
             "stop_service": ("pare o servico", "parar o servico", "interrompa o servico"),
+            "system_info": ("informacoes do computador", "informacoes do pc", "configuracoes do computador", "hardware do computador", "uso de memoria ram", "uso de ram", "espaco em disco", "qual meu processador", "qual minha placa de video"),
         }
         if tool_name == "type_into_window":
             return "janela" in text and any(phrase in text for phrase in intents[tool_name])
@@ -281,7 +286,9 @@ class LocalAgent:
                 decision = self.chat.decide(history, current_prompt, facts, catalog)
             except LocalModelError:
                 if observations:
-                    return "Executei as ferramentas locais possíveis, mas não consegui gerar o resumo final. Resultados:\n" + "\n".join(observations)
+                    return self._with_tool_evidence(
+                        "As ferramentas locais retornaram os resultados abaixo.", observations
+                    )
                 return self.chat.reply(history, user_text, facts)
             if decision["action"] == "answer":
                 answer = decision.get("message", "").strip()
@@ -299,6 +306,7 @@ class LocalAgent:
                 "create_code_file",
                 "run_powershell", "list_windows", "activate_window", "type_into_window", "click_window", "close_window",
                 "list_services", "service_status", "start_service", "stop_service",
+                "system_info",
             }:
                 return "O modelo propôs uma ferramenta que não está habilitada; não executei a ação."
             if not self._authorized_by_current_request(tool_name, user_text):
@@ -314,7 +322,7 @@ class LocalAgent:
             except ConfirmationRequired as exc:
                 return f"Não concluído: {exc}"
             except (FileToolError, ApplicationToolError, CodeWorkspaceError, WebToolError, PowerShellError, WindowsAutomationError,
-                    ServiceControlError, ValueError) as exc:
+                    ServiceControlError, SystemMonitorError, ValueError) as exc:
                 observations.append(f"{tool_name}: erro: {exc}")
             current_prompt = (
                 f"Pedido original do usuário: {user_text}\n\n"
@@ -334,3 +342,4 @@ class LocalAgent:
                 answer = "Resultado observado pelas ferramentas locais:"
             return self._with_tool_evidence(answer, observations)
         return self.chat.reply(history, user_text, facts)
+
