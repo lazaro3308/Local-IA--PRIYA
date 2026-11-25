@@ -56,7 +56,7 @@ O projeto reúne interface gráfica, comandos em português e módulos opcionais
 
 ## 🖼️ Capturas e interface
 
-A interface mantém o tema escuro com acentos discretos em ciano e vermelho, organiza os controles de voz em um grupo com mais espaço entre botões e permite recolher a lateral. Em telas menores, a lateral pode ser rolada para manter os controles separados.
+A interface mantém o tema escuro com acentos discretos em ciano e vermelho, organiza os controles de voz em um grupo, mantém o botão de envio compacto e permite recolher a lateral. Em telas menores, a lateral pode ser rolada para manter os controles separados.
 
 Cada entrada do histórico abre uma conversa própria; **Nova conversa** inicia outra sessão. **Memória completa** cria uma conversa separada com os fatos guardados e o histórico local disponível, sem misturar o conteúdo com os chats anteriores.
 

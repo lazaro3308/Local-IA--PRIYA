@@ -165,7 +165,7 @@ class PriyaDesktop(QMainWindow):
             QPushButton#MemoryButton:hover { background: #301a21; border-color: #a44a57; }
             QPushButton#SidebarToggle { background: transparent; border: 1px solid #30313a; color: #e04452; font-size: 16pt; padding: 0; }
             QPushButton#SidebarToggle:hover { background: #1a1419; border-color: #91404a; }
-            QPushButton#SendButton { min-height: 42px; min-width: 166px; background: #c93143; color: #fff7f7; border: 1px solid #e04755; font-weight: 700; padding: 11px 17px; }
+            QPushButton#SendButton { min-height: 36px; min-width: 142px; background: #c93143; color: #fff7f7; border: 1px solid #e04755; font-weight: 700; padding: 7px 11px; }
             QPushButton#SendButton:hover { background: #e44251; border-color: #ff6974; }
             QPushButton#Suggestion { background: #13141a; color: #e3e1e6; border: 1px solid #30313a; border-radius: 11px; padding: 14px 15px; text-align: left; font-size: 10pt; }
             QPushButton#Suggestion:hover { background: #1a1419; border-color: #91404a; }
